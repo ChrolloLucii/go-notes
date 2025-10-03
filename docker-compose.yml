@@ -1,0 +1,2 @@
+# TODO: Добавить докер-композ Конфигурацию
+# Services: mongodb, notes-service, auth-service, storage-service, api-gateway, prometheus, grafana
