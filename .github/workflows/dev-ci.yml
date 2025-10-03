@@ -1,0 +1,70 @@
+name: Dev Go CI Pipeline
+
+on:
+  pull_request:
+    branches: 
+      - dev
+  push:
+    branches: 
+      - dev
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5.0.0
+      
+      - name: Setup Go
+        uses: actions/setup-go@v6.0.0
+        with:
+          go-version: '1.25.1'
+
+      - name: Cache Go Modules
+        uses: actions/cache@v4.3.0
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      
+      - name: Build and test API gateway
+        working-directory: ./api-gateway
+        run: |
+          go mod download
+          go build -v ./...
+          go test -v ./...
+
+      - name: Build and test Auth Service
+        working-directory: ./services/auth
+        run: |
+          go mod download
+          go build -v ./...
+          go test -v ./...
+
+      - name: Build and test Notes Service
+        working-directory: ./services/notes
+        run: |
+          go mod download
+          go build -v ./...
+          go test -v ./...
+      
+      - name: Build and test Storage Service
+        working-directory: ./services/storage
+        run: |
+          go mod download
+          go build -v ./...
+          go test -v ./...
+
+      - name: Run go fmt check
+        run: |
+          test -z "$(gofmt -l ./api-gateway ./services)"
+
+      - name: Run go vet
+        run: |
+          cd api-gateway && go vet ./...
+          cd ../services/auth && go vet ./...
+          cd ../notes && go vet ./...
+          cd ../storage && go vet ./...
